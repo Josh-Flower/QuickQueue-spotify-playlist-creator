@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styles from "./App.module.css";
 import SearchResults from "../SearchResults/SearchResults.js";
 import Playlist from "../Playlist/Playlist.js";
+import SearchBar from "../SearchBar/SearchBar.js";
 
 function App() {
   const [searchResults, setSearchResults] = useState([
@@ -57,13 +58,27 @@ function App() {
     setPlaylistTracks(existingTrack);
   };
 
+  function updatePlaylistName(name) {
+    setPlaylistName(name);
+  }
+
+  function savePlaylist() {
+    const trackURIs = playlistTracks.map((t) => t.uri);
+  }
+
+  function search(term) {
+    console.log(term);
+  }
+
   return (
     <div>
       <h1>
         Ja<span className={styles.highlight} >mmm</span>ing
       </h1>
       <div className={styles.App}>
+
         {/* <!-- Add a SearchBar component --> */}
+        <SearchBar onSearch={search} />
 
         <div className={styles['App-playlist']}>
           {/* <!-- Add a SearchResults component --> */}
@@ -74,6 +89,8 @@ function App() {
             playlistName={playlistName} 
             playlistTracks={playlistTracks}
             onRemove={removeTrack}
+            onNameChange={updatePlaylistName}
+            onSave={savePlaylist}
           />
         </div>
       </div>
