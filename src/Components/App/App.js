@@ -8,40 +8,12 @@ import Spotify from "../../util/Spotify/Spotify.js";
 
 function App() {
   const [searchResults, setSearchResults] = useState([
-    {
-      name: 'example track name 1',
-      artist: 'example track artist 1',
-      album: 'example track album 1',
-      id: 1,
-    },
-    {
-      name: 'example track name 2',
-      artist: 'example track artist 2',
-      album: 'example track album 2',
-      id: 2,
-    }
+    
   ]
   );
   const [playlistName, setPlaylistName] = useState('Example Playlist Name');
   const [playlistTracks, setPlaylistTracks] = useState([
-    {
-      name: 'example track name 1',
-      artist: 'example track artist 1',
-      album: 'example track album 1',
-      id: 1,
-    },
-    {
-      name: 'example track name 2',
-      artist: 'example track artist 2',
-      album: 'example track album 2',
-      id: 2,
-    },
-    {
-      name: 'example track name 3',
-      artist: 'example track artist 3',
-      album: 'example track album 3',
-      id: 3,
-    },
+    
   ]);
 
   function addTrack(track) {
@@ -80,7 +52,7 @@ function App() {
   return (
     <div>
       <h1>
-        Ja<span className={styles.highlight} >mmm</span>ing
+        Quick<span className={styles.highlight} >Q</span>
       </h1>
       <div className={styles.App}>
 

@@ -5,6 +5,7 @@ import Tracklist from "../TrackList/TrackList.js";
 function SearchResults(props) {
   return (
     <div className={styles.SearchResults}>
+      <h2>Search Results</h2>
       {/* <!-- Add a TrackList component --> */}
       <Tracklist
         userSearchResults={props.userSearchResults}
