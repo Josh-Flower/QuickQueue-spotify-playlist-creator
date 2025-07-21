@@ -31,12 +31,20 @@ async function generateCodeChallenge(codeVerifier) {
 // ─────────────────────────────
 const Spotify = {
   async getAccessToken() {
-    if (accessToken) return accessToken;
+    // ─── 1. Check LocalStorage First ───
+    const storedToken = localStorage.getItem("access_token");
+    const storedExpiry = localStorage.getItem("expires_at");
+
+    if (storedToken && storedExpiry && Date.now() < parseInt(storedExpiry, 10)) {
+      accessToken = storedToken;
+      expiresAt = parseInt(storedExpiry, 10);
+      return accessToken;
+    }
 
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
 
-    // ─── Handle redirect from Spotify ───
+    // ─── 2. If Spotify Redirected with Code ───
     if (code) {
       const codeVerifier = localStorage.getItem("code_verifier");
 
@@ -48,39 +56,72 @@ const Spotify = {
         code_verifier: codeVerifier,
       });
 
-      const response = await fetch("https://accounts.spotify.com/api/token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: body.toString(),
-      });
+      try {
+        const response = await fetch("https://accounts.spotify.com/api/token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: body.toString(),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.access_token) {
-        accessToken = data.access_token;
-        expiresAt = Date.now() + data.expires_in * 1000;
+        // Remove code from URL whether successful or not
+        window.history.replaceState({}, document.title, "/");
 
-        window.history.replaceState({}, document.title, "/"); // Clean URL
-        return accessToken;
-      } else {
-        console.error("Token exchange failed", data);
+        if (data.access_token) {
+          accessToken = data.access_token;
+          expiresAt = Date.now() + data.expires_in * 1000;
+
+          // Persist access token and expiry
+          localStorage.setItem("access_token", accessToken);
+          localStorage.setItem("expires_at", expiresAt.toString());
+
+          // Clean up
+          sessionStorage.removeItem("authAttempted");
+
+          return accessToken;
+        } else {
+          console.error("Token exchange failed:", data);
+
+          // Clear everything on failure and restart
+          localStorage.removeItem("code_verifier");
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("expires_at");
+          sessionStorage.removeItem("authAttempted");
+
+          if (data.error === "invalid_grant") {
+            window.location.href = redirectUrl; // restart clean
+          }
+
+          return null;
+        }
+      } catch (error) {
+        console.error("Network or token error:", error);
+        window.history.replaceState({}, document.title, "/");
         return null;
       }
     }
 
-    // ─── Start Authorization ───
-    const codeVerifier = generateCodeVerifier();
-    const codeChallenge = await generateCodeChallenge(codeVerifier);
-    localStorage.setItem("code_verifier", codeVerifier);
+    // ─── 3. Begin New Auth Flow ───
+    if (!sessionStorage.getItem("authAttempted")) {
+      sessionStorage.setItem("authAttempted", "true");
 
-    const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientID}&scope=playlist-modify-public&redirect_uri=${encodeURIComponent(
-      redirectUrl
-    )}&code_challenge_method=S256&code_challenge=${codeChallenge}`;
+      const codeVerifier = generateCodeVerifier();
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
+      localStorage.setItem("code_verifier", codeVerifier);
 
-    window.location = authUrl;
+      const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientID}&scope=playlist-modify-public&redirect_uri=${encodeURIComponent(
+        redirectUrl
+      )}&code_challenge_method=S256&code_challenge=${codeChallenge}`;
+
+      window.location = authUrl;
+    }
+
+    return null;
   },
+
 
   async search(term) {
     const token = await Spotify.getAccessToken();
