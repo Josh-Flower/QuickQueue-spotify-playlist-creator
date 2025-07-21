@@ -33,5 +33,7 @@ A modern React app that lets you search Spotify’s music library, build custom 
 ---
 
 📫 Contact
+
 Created by Josh Flower
+
 Open to feedback, issues, or collaboration!
